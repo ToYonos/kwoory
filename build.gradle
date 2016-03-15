@@ -1,0 +1,24 @@
+apply plugin: 'groovy'
+apply plugin: 'eclipse'
+
+sourceCompatibility = 1.7
+version = '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'org.codehaus.groovy:groovy-all:2.4.4'
+	runtime 'mysql:mysql-connector-java:5.1.33'
+}
+
+task makeJar(type: Jar) {
+	manifest {
+		attributes 'Implementation-Title': 'Kwoory', 'Implementation-Version': version
+		attributes 'Main-Class': 'KwooryMain'
+	}
+	from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+	from { configurations.runtime.collect { it.isDirectory() ? it : zipTree(it) } }
+	with jar
+}
