@@ -8,14 +8,16 @@ import java.util.logging.Logger
 Logger.getLogger("").setLevel(Level.SEVERE)
 
 @Field err = {
-	System.err.println it 
+	System.err.println it
 	System.exit(1)
 }
 
 @Field final CONFIG_FILE = "kwoory.config"
 @Field final operations = ['from', 'group', 'help']
 @Field final drivers = [mysql: 'com.mysql.jdbc.Driver']
+
 @Field final WITH = 'with'
+@Field final VERTICAL = 'vertical'
 
 @Field config = {
 	def configUrl = getClass().getClassLoader().getResource(CONFIG_FILE)
@@ -32,7 +34,6 @@ Logger.getLogger("").setLevel(Level.SEVERE)
 	}
 	return Sql.newInstance(url.toString(), config.credentials.user, config.credentials.password, drivers.get(config.credentials.type))
 }()
-@Field columnLimit = config.columnLimit ?: 10
 
 @Field extractParameters = {
 	def params = Arrays.asList(it).subList(2, it.length)
@@ -61,7 +62,25 @@ Logger.getLogger("").setLevel(Level.SEVERE)
 	}
 	else
 	{
-		if (metaData.getColumnCount() > columnLimit)
+		def columnSize = [:]
+		def totalSize = 1
+		if (config.display.style != VERTICAL)
+		{
+			rows.each { row ->
+				for (i in 1..metaData.getColumnCount())
+				{
+					def size = Math.max(columnSize.get(metaData.getColumnName(i)) ?: 0, Math.max(metaData.getColumnName(i).size(), row.getAt(i-1).toString().size()))
+					columnSize.put(metaData.getColumnName(i), size)
+				}
+			}
+			columnSize.each { totalSize += it.value + 3 }
+		}
+
+		def displayVertical = config.display.style == VERTICAL ||
+			(config.display.characterMaxSize && totalSize > config.display.characterMaxSize) ||
+			(config.display.columnMaxSize && config.display.columnMaxSize > metaData.getColumnCount())
+
+		if (displayVertical)
 		{
 			def rowId = 1
 			rows.each { row ->
@@ -80,19 +99,9 @@ Logger.getLogger("").setLevel(Level.SEVERE)
 		else
 		{
 			def separator = '+'
-			
 			def appendSeparator = { i ->
 				i.times { separator += '-' }
 				separator += '+'
-			}
-
-			def columnSize = [:]
-			rows.each { row ->
-				for (i in 1..metaData.getColumnCount())
-				{
-					def size = Math.max(columnSize.get(metaData.getColumnName(i)) ?: 0, Math.max(metaData.getColumnName(i).size(), row.getAt(i-1).toString().size()))
-					columnSize.put(metaData.getColumnName(i), size)
-				}
 			}
 
 			for (i in 1..metaData.getColumnCount())
@@ -137,10 +146,11 @@ Logger.getLogger("").setLevel(Level.SEVERE)
 	if (!fromParameters.isEmpty()) query += " WHERE "
 
 	def parametersIdx = fromParameters.size()
-	if (((config.parameters.get(alias)?.mandatory?.size ?: 0) + (config.parameters.get(alias)?.optional?.size ?: 0)) < fromParameters.size())
+	if (((config.parameters.get(alias)?.mandatory?.size() ?: 0) + (config.parameters.get(alias)?.optional?.size() ?: 0)) < fromParameters.size())
 	{
-		err "Too many parameters, mandatory parameters : " + (config.parameters.get(alias)?.mandatory ?: 'none') + ", optional parameters : " + (config.parameters.get(alias)?.optional ?: 'none')
-	} 
+		if (!config.aliases.tables.get(alias)) err "The alias '$alias' does not exist"
+		else err "Too many parameters, mandatory parameters : " + (config.parameters.get(alias)?.mandatory ?: 'none') + ", optional parameters : " + (config.parameters.get(alias)?.optional ?: 'none')
+	}
 
 	config.parameters."$alias".mandatory.each {
 		if (!parametersIdx) err "Missing mandatory parameter for the alias '$alias', mandatory parameters : " + config.parameters."$alias".mandatory
@@ -150,9 +160,9 @@ Logger.getLogger("").setLevel(Level.SEVERE)
 	config.parameters."$alias".optional.each {
 		if (!parametersIdx) return
 		query += appendParameter it, --parametersIdx > 0
-	}	
+	}
 
-	executeQuery query, fromParameters  
+	executeQuery query, fromParameters
 }
 
 @Field handleGroup = {
