@@ -5,6 +5,7 @@ import java.sql.SQLSyntaxErrorException
 import java.util.logging.Level
 import java.util.logging.Logger
 
+
 Logger.getLogger("").setLevel(Level.SEVERE)
 
 @Field err = {
@@ -62,6 +63,10 @@ Logger.getLogger("").setLevel(Level.SEVERE)
 	}
 	else
 	{
+		def displayRow = {
+			it instanceof byte[] ? new String(it) : it
+		}
+		
 		def columnSize = [:]
 		def totalSize = 1
 		if (config.display.style != VERTICAL)
@@ -69,7 +74,7 @@ Logger.getLogger("").setLevel(Level.SEVERE)
 			rows.each { row ->
 				for (i in 1..metaData.getColumnCount())
 				{
-					def size = Math.max(columnSize.get(metaData.getColumnName(i)) ?: 0, Math.max(metaData.getColumnName(i).size(), row.getAt(i-1).toString().size()))
+					def size = Math.max(columnSize.get(metaData.getColumnName(i)) ?: 0, Math.max(metaData.getColumnName(i).size(), displayRow(row.getAt(i-1)).toString().size()))
 					columnSize.put(metaData.getColumnName(i), size)
 				}
 			}
@@ -92,7 +97,7 @@ Logger.getLogger("").setLevel(Level.SEVERE)
 				println "*************************** ${rowId++}. row ***************************"
 				for (i in 1..metaData.getColumnCount())
 				{
-					println String.format("%${maxSize}s: %s", metaData.getColumnName(i), row.getAt(i-1))
+					println String.format("%${maxSize}s: %s", metaData.getColumnName(i), displayRow(row.getAt(i-1)))
 				}
 			}
 		}
@@ -120,7 +125,7 @@ Logger.getLogger("").setLevel(Level.SEVERE)
 			rows.each { row ->
 				for (i in 1..metaData.getColumnCount())
 				{
-					print String.format("| %-${columnSize.get(metaData.getColumnName(i))}s ", row.getAt(i-1))
+					print String.format("| %-${columnSize.get(metaData.getColumnName(i))}s ", displayRow(row.getAt(i-1)))
 				}
 				println '|'
 				println separator
