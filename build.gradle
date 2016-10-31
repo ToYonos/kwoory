@@ -15,7 +15,7 @@ dependencies {
 
 task makeJar(type: Jar) {
 	manifest {
-		attributes 'Implementation-Title': 'Kwoory', 'Implementation-Version': version
+		attributes 'Implementation-Title': 'kwoory', 'Implementation-Version': version
 		attributes 'Main-Class': 'KwooryMain'
 	}
 	from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }

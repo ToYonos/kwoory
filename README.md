@@ -1,7 +1,7 @@
 # kwoory
 
 ## What is it ?
-Kwoory is a command line tool, written in Groovy, designed to perform simple queries on database. The main idea is too make simple queries easier to type and make them a little less verbose.
+kwoory is a command line tool, written in Groovy, designed to perform simple queries on database. The main idea is too make simple queries easier to type and make them a little less verbose.
 
 ## How to build ?
 
