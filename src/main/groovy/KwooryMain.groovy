@@ -128,8 +128,8 @@ Logger.getLogger("").setLevel(Level.SEVERE)
 					print String.format("| %-${columnSize.get(metaData.getColumnName(i))}s ", displayRow(row.getAt(i-1)))
 				}
 				println '|'
-				println separator
 			}
+			println separator
 		}
 		println "${rows.size()} ${rows.size() == 1 ? 'row' : 'rows'} in set\n"
 	}
@@ -171,11 +171,6 @@ Logger.getLogger("").setLevel(Level.SEVERE)
 }
 
 @Field handleGroup = {
-	def extractFromParameters = {
-		def params = Arrays.asList(it).subList(2, it.length)
-		return new ArrayList(params.indexOf(WITH) != -1 ? params.subList(0, params.indexOf(WITH)) : params)
-	}
-
 	def alias = this.args[1]
 	def table = config.aliases.tables.get(alias) ?: alias
 	def groupParameters = extractParameters this.args
